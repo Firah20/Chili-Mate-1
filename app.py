@@ -1,11 +1,9 @@
 import streamlit as st
+import os
 from products import products
-from utils import load_css, get_filtered_products, show_cart
+from utils import get_filtered_products, show_cart
 from checkout import show_checkout_form
 from auth import show_login, show_profile
-
-# Load custom CSS for enchanted UI
-load_css()
 
 # Initialize session states
 def initialize_session_states():
@@ -29,8 +27,15 @@ def initialize_session_states():
 initialize_session_states()
 
 # Sidebar navigation
+import os
+
+if os.path.exists("streamlit-ecommerce/images/logo.jpg"):
+    st.sidebar.image("streamlit-ecommerce/images/logo.jpg", width=200)
+else:
+    st.sidebar.error("❌ File logo tidak ditemukan!")
+
 def setup_sidebar():
-    st.sidebar.header("Navigation")
+    st.sidebar.header("Menu")
     pages = ["🏡 Home", "🗂️ Products Details", "❤️ Wishlist", "🛒 Cart", "🛍️ Checkout", "🔑 Login"]
     st.session_state.current_page = st.sidebar.radio("Go to", pages) 
     show_profile() 
@@ -42,8 +47,7 @@ def check_authentication():
         st.stop()
 
 # Products Filtering and Sorting
-def get_product_filters():
-    search_query = st.sidebar.text_input("🔍 Search Products", "")   
+def get_product_filters(): 
     category_filter = st.sidebar.selectbox(
         "📂 Filter by Category",
         ["All"] + list(set(p["category"] for p in products))
@@ -52,7 +56,7 @@ def get_product_filters():
         "🔽 Sort by",
         ["Price: Low to High", "Price: High to Low", "Rating", "Newest"]
     )
-    return search_query, category_filter, sort_option
+    return category_filter, sort_option
 
 def sort_products(products, sort_option):
     if sort_option == "Price: Low to High":
@@ -81,13 +85,19 @@ def display_products_card(product, col):
             if st.button(f"🛒 Add - {product['name']}", key=f"add_{product['name']}"):
                 st.session_state.cart.append(product)
                 st.success(f"{product['name']} Added to cart!")
+
+def get_filtered_products(products, category_filter, min_price, max_price):
+    filtered = [p for p in products if
+                (category_filter == "All" or p["category"] == category_filter)
+                and min_price <= p["price"] <= max_price]
+    return filtered
         
 def show_products():
     st.header("🛍️ Products")
-    search_query, category_filter, sort_option = get_product_filters()
+    category_filter, sort_option = get_product_filters()
 
     filtered_products = get_filtered_products(
-        products, search_query, category_filter, 0, float("inf")
+        products,category_filter, 0, float("inf")
     )
     sorted_products = sort_products(filtered_products, sort_option)
 
@@ -180,7 +190,7 @@ def show_checkout():
 
 # Main functions to run the app
 def main():
-    st.title("Chili Mate")
+    st.title("Chili Mate 🌶️")
     setup_sidebar()
     check_authentication()
 
@@ -261,12 +271,8 @@ def display_products_card(product, col):
 def show_products():
     st.header("🛍️ Products")
 
-# Filters
-search_query, category_filter, sort_option = get_product_filters()
-
 # Apply filters and sorting
 def get_product_filters():
-    search_query = st.sidebar.text_input("🔍 Search Products", "")   
     category_filter = st.sidebar.selectbox(
         "📂 Filter by Category",
         ["All"] + list(set(p["category"] for p in products))
@@ -275,7 +281,8 @@ def get_product_filters():
         "🔽 Sort by",
         ["Price: Low to High", "Price: High to Low", "Rating", "Newest"]
     )
-    return search_query, category_filter, sort_option
+    return category_filter, sort_option
+
 
     # Responsive grid layout
     cols = st.columns(3)
@@ -285,8 +292,6 @@ def get_product_filters():
         # Create new row after every 3 products
         if (idx + 1) % 3 == 0 and (idx + 1) < len(sorted_products):
             cols = st.columns(3)
-
-
 
 
 
